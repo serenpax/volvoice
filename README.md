@@ -6,7 +6,7 @@
 
 ## 下载
 
-前往 **[Releases](https://github.com/ShineDing/volvoice/releases)** 直接下载，无需构建：
+前往 **[Releases](https://github.com/serenpax/volvoice/releases)** 直接下载，无需构建：
 
 | 文件 | 说明 |
 |---|---|
@@ -196,4 +196,4 @@ keytool -genkeypair -keystore release.keystore -alias vi-voice `
 
 ## License
 
-[MIT](LICENSE) © 2026 ShineDing
+[MIT](LICENSE) © 2026 serenpax
