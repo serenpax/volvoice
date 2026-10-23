@@ -1,0 +1,19 @@
+# ===== 本地配置与凭据（切勿提交）=====
+PC_Server/config.json
+*.keystore
+Phone_Client/local.properties
+
+# ===== 构建产物 =====
+PC_Server/*.exe
+PC_Server/*.log
+Phone_Client/.gradle/
+Phone_Client/.kotlin/
+Phone_Client/build/
+Phone_Client/app/build/
+
+# ===== 杂项 =====
+*.log
+*.wav
+__pycache__/
+.idea/
+*.iml

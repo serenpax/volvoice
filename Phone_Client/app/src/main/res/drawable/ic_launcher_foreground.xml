@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 声轮 图标前景：白色麦克风 + 八颗弹巢圆点环 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 环形轨道（淡） -->
+    <path
+        android:pathData="M54,24 a30,30 0 1,1 -0.01,0 z"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.35"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000" />
+
+    <!-- 八颗弹巢圆点 -->
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M81,54 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M72.2,72.2 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M51,81 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M29.8,72.2 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M21,54 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M29.8,35.8 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M51,27 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+    <path android:fillColor="#FFFFFF" android:fillAlpha="0.9"
+        android:pathData="M72.2,35.8 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 z" />
+
+    <!-- 麦克风：胶囊头 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,46 a6,6 0 0,1 12,0 v8 a6,6 0 0,1 -12,0 z" />
+    <!-- 麦克风：支架 U 形 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M44,54.5 a10,10 0 0,0 20,0" />
+    <!-- 麦克风：立杆与底座 -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.4"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M54,64.5 v5 M48.5,69.5 h11" />
+</vector>
