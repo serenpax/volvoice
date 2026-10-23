@@ -4,6 +4,15 @@
 
 手机通过 **WiFi 局域网 + HTTP** 与 PC 通信，语音由 PC 调用 ASR 网关（OpenAI 风格接口，如 `xiaomi/mimo-v2.5-asr`）转写，转写结果以剪贴板/键盘注入的方式打进焦点窗口。全离线可用（局域网内），无任何第三方遥测。
 
+## 下载
+
+前往 **[Releases](https://github.com/ShineDing/volvoice/releases)** 直接下载，无需构建：
+
+| 文件 | 说明 |
+|---|---|
+| `PC_Server.exe` | Windows 服务端（约 270KB，双击即用，无任何依赖） |
+| `Volvoice-v1.0.apk` | Android 手机端（约 40KB，Android 8.0+） |
+
 | 亮色 | 护眼 | 黑色 |
 |---|---|---|
 | ![亮色](screenshots/ui-light.png) | ![护眼](screenshots/ui-eyecare.png) | ![黑色](screenshots/ui-dark.png) |
@@ -184,3 +193,7 @@ keytool -genkeypair -keystore release.keystore -alias vi-voice `
 - [ ] 手机端虚拟按键（方向/回车/打断，遥控 PC 按键行为）
 - [ ] 自动发现服务端（UDP 广播，免填 IP）
 - [ ] 国际化（English UI）
+
+## License
+
+[MIT](LICENSE) © 2026 ShineDing
