@@ -1,0 +1,390 @@
+/* ================================================================
+   Volvoice · 方案 E · 精准暗调 × 对讲机
+   ================================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: #0E0F12;
+  color: #E8E8EA;
+  min-height: 100vh;
+  padding: 40px 24px 64px;
+}
+
+.page-head { text-align: center; margin-bottom: 40px; }
+.page-head h1 { font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+.page-head p { margin-top: 8px; font-size: 14px; color: #9A9BA3; }
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 48px 48px;
+  justify-content: center;
+  align-items: flex-start;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.scheme-block { width: 380px; }
+.scheme-block figcaption { margin-top: 18px; text-align: center; }
+.scheme-block h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.scheme-block p { font-size: 13px; color: #9A9BA3; }
+
+/* ---------------- 手机外框 ---------------- */
+.phone { width: 380px; }
+.bezel {
+  border-radius: 44px;
+  padding: 10px;
+  background: linear-gradient(160deg, #2A2B30, #17181C);
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.screen {
+  position: relative;
+  width: 360px;
+  height: 740px;
+  border-radius: 36px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #0C0C11;
+  color: #ECECF0;
+}
+
+/* 系统状态栏（装饰） */
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 22px 4px;
+  font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,.85);
+  position: relative; z-index: 5;
+}
+.sb-icons { font-size: 9px; letter-spacing: 2px; opacity: .8; }
+
+/* ---------------- 对讲机机身握持纹 ---------------- */
+.grip {
+  position: absolute; top: 130px; bottom: 150px;
+  width: 10px; z-index: 1;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0 6px,
+    rgba(255,255,255,.045) 6px 7px
+  );
+}
+.grip-l { left: 5px; border-radius: 4px; }
+.grip-r { right: 5px; border-radius: 4px; }
+
+/* ---------------- 转盘几何 ---------------- */
+.wheel-zone {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 2;
+}
+.wheel { position: relative; width: 320px; height: 320px; }
+
+.wheel-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+/* 频率刻度环：发丝级密齿 */
+.dial-ticks {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255,255,255,.22) 0deg 0.5deg,
+    transparent 0.5deg 5.625deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 91%, #000 92%, #000 97%, transparent 98%);
+          mask: radial-gradient(circle, transparent 91%, #000 92%, #000 97%, transparent 98%);
+}
+/* 每 45° 一根长齿（叠一层疏的） */
+.dial-ticks::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255,255,255,.4) 0deg 0.7deg,
+    transparent 0.7deg 45deg
+  );
+  -webkit-mask: radial-gradient(circle, transparent 89%, #000 90%, #000 97.5%, transparent 98.5%);
+          mask: radial-gradient(circle, transparent 89%, #000 90%, #000 97.5%, transparent 98.5%);
+}
+
+/* 刻度数字 CH01/03/05/07 */
+.dial-label {
+  position: absolute;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 1px;
+  color: rgba(255,255,255,.28);
+  z-index: 1;
+}
+.dl-n { top: 4px; left: 50%; transform: translateX(-50%); }
+.dl-s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.dl-w { left: 6px; top: 50%; transform: translateY(-50%); }
+.dl-e { right: 6px; top: 50%; transform: translateY(-50%); }
+
+/* 外圈频道键 */
+.sat {
+  --r: 128px;
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 72px; height: 72px;
+  margin: -36px 0 0 -36px;
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+  transform:
+    rotate(calc(var(--i) * 45deg - 90deg))
+    translate(var(--r))
+    rotate(calc(90deg - var(--i) * 45deg));
+  background: #14141C;
+  border: 1px solid rgba(255,255,255,.08);
+  color: #9A9DAB;
+  font-size: 12px; font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35);
+  user-select: none;
+}
+.sat .ch {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 8.5px; font-weight: 600; letter-spacing: 1px;
+  color: rgba(255,255,255,.28);
+}
+.sat span { pointer-events: none; line-height: 1.2; }
+
+/* ---------------- 中央 PTT ---------------- */
+.ptt {
+  position: absolute; left: 50%; top: 50%;
+  width: 148px; height: 148px;
+  margin: -74px 0 0 -74px;
+  border-radius: 50%;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  z-index: 3;
+}
+.ptt-face {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 32%, #1E1E28 0%, #121218 70%);
+  border: 1px solid rgba(255,255,255,.1);
+  color: #7C8CFF;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 0 1px rgba(0,0,0,.4);
+}
+/* 机加工凹槽环 */
+.ptt-groove {
+  position: absolute; inset: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.05);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.03);
+  pointer-events: none;
+}
+.ptt-label {
+  font-size: 13px; font-weight: 700; letter-spacing: 3px; text-indent: 3px;
+  color: #C8CAD4;
+  margin-top: 1px;
+}
+.ptt-sub {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 8px; font-weight: 600; letter-spacing: 2px;
+  color: rgba(255,255,255,.3);
+  margin-top: 1px;
+}
+
+/* ---------------- 顶部 ---------------- */
+.e-top {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 22px 0;
+  position: relative; z-index: 5;
+}
+.e-brand { display: flex; align-items: center; gap: 9px; }
+.e-mark {
+  width: 10px; height: 10px; border-radius: 3px;
+  background: linear-gradient(135deg, #7C8CFF, #5B6BF0);
+  box-shadow: 0 0 10px rgba(124,140,255,.45);
+}
+.e-name { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+.e-freq {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 1.5px;
+  color: rgba(255,255,255,.3);
+  margin-left: 4px;
+  padding: 3px 7px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+}
+
+/* RX / TX 指示灯章 */
+.e-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  background: #14141C;
+  border: 1px solid rgba(255,255,255,.07);
+}
+.e-led {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.e-chip.rx { color: #4ADE80; }
+.e-chip.rx .e-led {
+  background: #4ADE80;
+  box-shadow: 0 0 8px rgba(74,222,128,.7);
+}
+.e-chip.tx { color: #FF5A5F; }
+.e-chip.tx .e-led {
+  background: #FF5A5F;
+  box-shadow: 0 0 10px rgba(255,90,95,.85);
+}
+
+/* ---------------- 底部结果面板 ---------------- */
+.e-result {
+  margin: 0 20px 24px;
+  padding: 14px 16px 16px;
+  border-radius: 14px;
+  background: #101018;
+  border: 1px solid rgba(255,255,255,.07);
+  position: relative; z-index: 5;
+}
+
+/* 信号格 + 对端呼号 */
+.e-signal-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 12px;
+}
+.e-signal { display: flex; align-items: center; gap: 8px; }
+.sig-k {
+  font-style: normal;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 9px; font-weight: 600; letter-spacing: 1.5px;
+  color: #5B5E6B;
+}
+.bars { display: flex; align-items: flex-end; gap: 2.5px; height: 12px; }
+.bars b {
+  display: block; width: 3.5px; border-radius: 1px;
+  background: #7C8CFF;
+}
+.bars b:nth-child(1) { height: 4px; }
+.bars b:nth-child(2) { height: 6px; }
+.bars b:nth-child(3) { height: 8px; }
+.bars b:nth-child(4) { height: 10px; }
+.bars b:nth-child(5) { height: 12px; }
+.bars b.off { background: rgba(255,255,255,.1); }
+.bars.live b { background: #FF5A5F; box-shadow: 0 0 6px rgba(255,90,95,.5); }
+.e-mac {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  color: #8A8D9B;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 扬声器格栅 */
+.grille {
+  height: 14px;
+  margin-bottom: 12px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,.10) 0 1px,
+    transparent 1px 3.5px
+  );
+  opacity: .8;
+}
+.grille.hot {
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255,90,95,.35) 0 1px,
+    transparent 1px 3.5px
+  );
+  box-shadow: 0 0 12px rgba(255,90,95,.15);
+}
+
+/* 发射波形 */
+.waveform {
+  display: flex; align-items: center; gap: 3px;
+  height: 22px;
+  margin-bottom: 10px;
+}
+.waveform b {
+  display: block; width: 3px; border-radius: 2px;
+  background: #FF5A5F;
+  box-shadow: 0 0 5px rgba(255,90,95,.45);
+}
+.waveform b:nth-child(1)  { height: 6px; }
+.waveform b:nth-child(2)  { height: 12px; }
+.waveform b:nth-child(3)  { height: 18px; }
+.waveform b:nth-child(4)  { height: 10px; }
+.waveform b:nth-child(5)  { height: 20px; }
+.waveform b:nth-child(6)  { height: 14px; }
+.waveform b:nth-child(7)  { height: 8px; }
+.waveform b:nth-child(8)  { height: 16px; }
+.waveform b:nth-child(9)  { height: 22px; }
+.waveform b:nth-child(10) { height: 12px; }
+.waveform b:nth-child(11) { height: 7px; }
+.waveform b:nth-child(12) { height: 15px; }
+.waveform b:nth-child(13) { height: 19px; }
+.waveform b:nth-child(14) { height: 9px; }
+.waveform b:nth-child(15) { height: 13px; }
+.waveform b:nth-child(16) { height: 17px; }
+.waveform b:nth-child(17) { height: 8px; }
+.waveform b:nth-child(18) { height: 5px; }
+
+.e-result-msg {
+  font-size: 13px; font-weight: 500; color: #C8CAD4;
+  margin-bottom: 10px;
+}
+.e-result-stats {
+  display: flex; gap: 18px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  font-size: 12px; font-weight: 600; color: #ECECF0;
+  font-variant-numeric: tabular-nums;
+}
+.e-result-stats i {
+  font-style: normal;
+  margin-right: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  color: #5B5E6B;
+}
+
+/* ================================================================
+   TX（发射）状态差异
+   ================================================================ */
+.tx-state .ptt-face {
+  border-color: rgba(255,90,95,.45);
+  color: #FF5A5F;
+  box-shadow:
+    0 8px 32px rgba(0,0,0,.5),
+    0 0 28px rgba(255,90,95,.28),
+    inset 0 0 18px rgba(255,90,95,.12),
+    0 0 0 1px rgba(255,90,95,.2);
+}
+.tx-state .ptt-groove {
+  border-color: rgba(255,90,95,.18);
+}
+.tx-state .ptt-label { color: #FFB3B5; }
+.tx-state .ptt-sub { color: rgba(255,90,95,.55); }
+.tx-state .e-mark {
+  background: linear-gradient(135deg, #FF5A5F, #D63A3F);
+  box-shadow: 0 0 10px rgba(255,90,95,.45);
+}
+
+/* ---------------- 窄屏 ---------------- */
+@media (max-width: 480px) {
+  body { padding: 20px 10px 40px; }
+  .scheme-block, .phone { width: 100%; max-width: 380px; }
+  .bezel { padding: 8px; }
+  .screen { width: 100%; max-width: 360px; margin: 0 auto; }
+}

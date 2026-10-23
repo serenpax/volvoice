@@ -12,12 +12,14 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.math.min
-import kotlin.math.roundToLong
 import kotlin.math.sin
 
 /**
@@ -42,9 +44,35 @@ class RadialLayout @JvmOverloads constructor(
     private var velocity = 0.0
     private var lastMoveTime = 0L
 
+    // 槽位边界震动：记录上一个槽位序号（-1 = 尚未初始化）
+    private var lastSlotIndex = Long.MIN_VALUE
+
     private var settleAnimator: ValueAnimator? = null
 
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
+
+    // ---------------- 槽位震动 ----------------
+
+    private fun slotStep(): Double {
+        val n = childCount - 1
+        return if (n > 0) 2 * PI / n else 2 * PI
+    }
+
+    /** 每次跨过一个槽位边界震一下（拨动和惯性滑行都触发） */
+    private fun tickIfCrossedSlot() {
+        val step = slotStep()
+        if (step <= 0 || childCount < 2) return
+        val idx = Math.round(angleOffset / step)
+        if (idx != lastSlotIndex) {
+            if (lastSlotIndex != Long.MIN_VALUE) {
+                performHapticFeedback(
+                    HapticFeedbackConstants.CLOCK_TICK,
+                    HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+                )
+            }
+            lastSlotIndex = idx
+        }
+    }
 
     // ---------------- 测量与布局 ----------------
 
@@ -52,8 +80,9 @@ class RadialLayout @JvmOverloads constructor(
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val h = MeasureSpec.getSize(heightMeasureSpec)
         val base = min(w, h).toFloat()
-        val centerD = (base * 0.37f).toInt()
-        val satD = (base * 0.17f).toInt()
+        // 方案 E 比例（留边不裁切）：中央 0.40 / 外圈键 0.19 / 轨道半径 0.355
+        val centerD = (base * 0.40f).toInt()
+        val satD = (base * 0.19f).toInt()
         for (i in 0 until childCount) {
             val d = if (i == 0) centerD else satD
             getChildAt(i).measure(
@@ -77,7 +106,7 @@ class RadialLayout @JvmOverloads constructor(
         val satellites = childCount - 1
         if (satellites == 0) return
         val sd = getChildAt(1).measuredWidth
-        val radius = base * 0.35f
+        val radius = base * 0.355f
         for (i in 1 until childCount) {
             val angle = -PI / 2 + 2 * PI * (i - 1) / satellites + angleOffset
             val x = cx + (radius * cos(angle)).toInt()
@@ -108,7 +137,8 @@ class RadialLayout @JvmOverloads constructor(
                 tracking = !onCenterChild(ev.x, ev.y)
                 velocity = 0.0
                 lastMoveTime = SystemClock.uptimeMillis()
-                settleAnimator?.cancel()  // 手指按下即接管未完成的吸附动画
+                lastSlotIndex = Long.MIN_VALUE  // 首次跨界再震，按下不震
+                settleAnimator?.cancel()  // 手指按下即接管未完成的滑行动画
             }
             MotionEvent.ACTION_MOVE -> {
                 if (tracking && !rotating) {
@@ -144,6 +174,7 @@ class RadialLayout @JvmOverloads constructor(
                 }
                 lastMoveTime = now
 
+                tickIfCrossedSlot()  // 手指拨动时每过一槽震一下
                 requestLayout()
                 invalidate()
                 return true
@@ -166,21 +197,33 @@ class RadialLayout @JvmOverloads constructor(
 
     // ---------------- 惯性 + 咔哒吸附 ----------------
 
-    private fun slotStep(): Double {
-        val n = childCount - 1
-        return if (n > 0) 2 * PI / n else 2 * PI
-    }
-
-    /** 甩动惯性：按角速度外推一小段，再吸附到最近的固定槽位 */
+    /** 甩动惯性：指数衰减物理模型滑行，停稳后吸附到最近槽位 */
     private fun flingToSlot() {
-        // 松手越快外推越远，封顶约 1.2 个槽位，防止"转飞"
-        val step = slotStep()
-        var projected = angleOffset + velocity * 0.12
-        val maxExtra = step * 1.2
-        val extra = projected - angleOffset
-        if (extra > maxExtra) projected = angleOffset + maxExtra
-        if (extra < -maxExtra) projected = angleOffset - maxExtra
-        settleTo(projected)
+        // 松手角速度（封顶约 2.2 圈/秒，防"转飞"）
+        val startV = velocity.coerceIn(-14.0, 14.0)
+        val friction = 3.0  // 衰减系数：越小滑得越远越"飘"
+        // ∫v0·e^(-ft)dt = v0·(1-e^(-ft))/f，取 90% 衰减时长做动画
+        val duration =
+            ((-ln(0.1) / friction) * 1000).toLong().coerceIn(150, 900)
+
+        settleAnimator?.cancel()
+        val anim = ValueAnimator.ofFloat(0f, 1f).setDuration(duration)
+        anim.interpolator = LinearInterpolator()  // 曲线由物理积分自带
+        val start = angleOffset
+        anim.addUpdateListener { a ->
+            val t = a.animatedFraction * duration / 1000.0
+            angleOffset = start + startV * (1 - exp(-friction * t)) / friction
+            tickIfCrossedSlot()
+            requestLayout()
+            invalidate()
+        }
+        anim.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                settleToNearestSlot()  // 滑完再"咔哒"入位（含最终震动）
+            }
+        })
+        anim.start()
+        settleAnimator = anim
     }
 
     private fun settleToNearestSlot() {
