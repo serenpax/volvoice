@@ -1,11 +1,16 @@
 # ===== 本地配置与凭据（切勿提交）=====
 PC_Server/config.json
+Mac_Server/config.json
+Mac_Server/Volvoice/config.json
 *.keystore
 Phone_Client/local.properties
 
 # ===== 构建产物 =====
 PC_Server/*.exe
 PC_Server/*.log
+Mac_Server/volvoice-server
+Mac_Server/VolvoiceServer.app/
+Mac_Server/*.out
 Phone_Client/.gradle/
 Phone_Client/.kotlin/
 Phone_Client/build/
