@@ -70,6 +70,14 @@ std::string lower(std::string s) {
     return s;
 }
 
+// 按字节截断但保证落在 UTF-8 码点边界（防止截出非法序列）
+std::string utf8_head(const std::string& s, size_t n) {
+    if (s.size() <= n) return s;
+    size_t i = n;
+    while (i > 0 && i < s.size() && (s[i] & 0xC0) == 0x80) i--;
+    return s.substr(0, i);
+}
+
 struct Request {
     std::string method, path;
     std::string body;
@@ -280,13 +288,18 @@ void HttpServer::handle_client(int s) {
             if (!check_auth(req.auth)) {
                 status = 401;
                 resp_body = json_err("鉴权失败：token 不匹配");
+                slog::error("鉴权失败（401）：/transcribe，token 不匹配");
             } else {
+                slog::info("收到转写请求（" + std::to_string(req.body.size()) +
+                           " 字节）");
                 std::lock_guard<std::mutex> work(g_work_mutex);
                 std::string text, err;
                 long long asr_ms = 0;
                 if (!asr_.recognize_wav(req.body, text, err, &asr_ms)) {
                     status = 500;
                     resp_body = json_err(err);
+                    slog::error("ASR 转写失败（" + std::to_string(asr_ms) +
+                                "ms）: " + err);
                 } else {
                     std::string strategy, derr;
                     auto tp = std::chrono::steady_clock::now();
@@ -304,6 +317,9 @@ void HttpServer::handle_client(int s) {
                         resp_body = "{\"ok\":false,\"error\":" +
                                     json::escape("识别成功但上屏失败: " + derr) +
                                     ",\"text\":" + json::escape(text) + "}";
+                        slog::error("上屏失败（paste=" +
+                                    std::to_string(paste_ms) + "ms）: " + derr +
+                                    "；转写文本: " + utf8_head(text, 60));
                     } else {
                         resp_body =
                             json_ok(",\"text\":" + json::escape(text) +
@@ -314,7 +330,7 @@ void HttpServer::handle_client(int s) {
                     }
                     slog::info("转写 asr=" + std::to_string(asr_ms) +
                                "ms paste=" + std::to_string(paste_ms) +
-                               "ms: " + text.substr(0, 60));
+                               "ms: " + utf8_head(text, 60));
                 }
             }
 
@@ -322,12 +338,14 @@ void HttpServer::handle_client(int s) {
             if (!check_auth(req.auth)) {
                 status = 401;
                 resp_body = json_err("鉴权失败：token 不匹配");
+                slog::error("鉴权失败（401）：/text，token 不匹配");
             } else {
                 std::lock_guard<std::mutex> work(g_work_mutex);
                 std::string strategy, derr;
                 if (!text_out::paste(req.body, strategy, derr)) {
                     status = 500;
                     resp_body = json_err("上屏失败: " + derr);
+                    slog::error("上屏失败（/text）: " + derr);
                 } else {
                     resp_body = json_ok(",\"strategy\":" + json::escape(strategy));
                 }
@@ -337,12 +355,14 @@ void HttpServer::handle_client(int s) {
             if (!check_auth(req.auth)) {
                 status = 401;
                 resp_body = json_err("鉴权失败：token 不匹配");
+                slog::error("鉴权失败（401）：/clear，token 不匹配");
             } else {
                 std::lock_guard<std::mutex> work(g_work_mutex);
                 std::string strategy, derr;
                 if (!text_out::clear_input(strategy, derr)) {
                     status = 500;
                     resp_body = json_err(derr);
+                    slog::error("清空失败（/clear）: " + derr);
                 } else {
                     resp_body = json_ok(",\"strategy\":" + json::escape(strategy));
                 }
@@ -351,6 +371,7 @@ void HttpServer::handle_client(int s) {
         } else {
             status = 404;
             resp_body = json_err("未知路由: " + req.method + " " + req.path);
+            slog::error("未知路由: " + req.method + " " + req.path);
         }
 
         send_json(s, status, resp_body);

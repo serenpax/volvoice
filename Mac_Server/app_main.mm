@@ -140,9 +140,20 @@ namespace {
 void sink_to_window(const std::string& line) {
     AppDelegate* d = g_delegate;
     if (!d) return;
-    NSString* s = [NSString stringWithUTF8String:(line + "\n").c_str()];
+    // 非法 UTF-8（如日志里被字节截断的中文）会让 stringWithUTF8String 返回 nil，
+    // 进而使 appendAttributedString 抛异常导致进程 abort —— 必须回退到有损转换
+    NSString* s = [[NSString alloc] initWithBytes:line.data()
+                                           length:line.size()
+                                         encoding:NSUTF8StringEncoding];
+    if (!s) {
+        s = [[NSString alloc] initWithBytes:line.data()
+                                     length:line.size()
+                                   encoding:NSISOLatin1StringEncoding];
+    }
+    if (!s) s = @"(无法解码的日志行)";
+    NSString* out = [s stringByAppendingString:@"\n"];
     dispatch_async(dispatch_get_main_queue(), ^{
-      [d appendLog:s];
+      [d appendLog:out];
     });
 }
 }  // namespace
@@ -150,7 +161,7 @@ void sink_to_window(const std::string& line) {
 @implementation AppDelegate
 
 - (void)appendLog:(NSString*)line {
-    if (!self.logView) return;
+    if (!self.logView || line.length == 0) return;
     // 超长裁剪：只保留末尾约一半（对齐 Windows 版）
     if (self.logView.string.length > 64000) {
         NSString* keep = [self.logView.string
